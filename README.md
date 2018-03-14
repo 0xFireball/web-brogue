@@ -1,7 +1,56 @@
 Web Brogue
 ==========
 
+This is a fork of kipraske's original [web-brogue](https://github.com/kipraske/web-brogue).
+
 A web server for playing the Brogue over the internet.  Brogue is a game for Mac OS X, Windows, and Linux by Brian Walker.  For more information go https://sites.google.com/site/broguegame/.  The server only can be run on a POSIX environment at the moment.
+
+New Instructions
+-----
+
+The recommended way of running is through a reverse proxy. By default, web-brogue
+runs on port `19340`
+
+Install
+
+1. Install Node.js and MongoDB
+1. Run `npm install` in `server/`
+1. Build `brogue`, enter `brogue/` and run `make web`
+
+Run
+1. `node server/server.js`
+
+Configuring
+
+1. Update configuration
+    - Main config: `server/config.js`
+    - Client websocket config: `client/dataIO/socket.js`. If you're using the reverse proxy you want this set to the external port, because websocket requests come from the client to the proxy.
+1. You may need to rebuild after updating configuration.
+
+### Sample NGINX config
+
+```nginx
+server {
+        server_name brogue.example.com;
+
+        listen 80;
+
+        location / {
+        proxy_pass http://localhost:19340/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $http_host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forward-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forward-Proto http;
+        proxy_set_header X-Nginx-Proxy true;
+
+        proxy_redirect off;
+    }
+}
+```
 
 Build Instructions
 -----------------------
@@ -47,3 +96,4 @@ Server Configuration
 Server global configuration variables are defined in server/config.js. You may need to adjust these depending on how your environment is set up.
 
 In particular, if you change the port setting (port.HTTP = 8080) you must make the same change in client/dataIO/socket.js (window.location.hostname + ":8080").
+
